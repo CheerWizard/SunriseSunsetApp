@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">SunriseSunsetApp</string>
+    <string name="Sunset">Sunset:</string>
+    <string name="Sunrise">Sunrise:</string>
+    <string name="SolarNoon">Solar Noon:</string>
+    <string name="DayLength">Day Length:</string>
+    <string name="CivilTwilightBegin">Civil Twilight begin at:</string>
+    <string name="CivilTwilightEnd">Civil Twilight end at:</string>
+    <string name="NauticalTwilightBegin">Nautical Twilight begin at:</string>
+    <string name="NauticalTwilightEnd">Nautical Twilight end at:</string>
+    <string name="AstronomicalTwilightBegin">Astronomical Twilight begin at:</string>
+    <string name="AstronomicalTwilightEnd">Astronomical Twilight end at:</string>
+    <string name="unknown">unknown</string>
+    <string name="CountryCity">Country/City</string>
+    <string name="EnterLocation">Enter location...</string>
+    <string name="MyLocation">My location</string>
+    <string name="OtherLocation">Other location</string>
+    <string name="Check">Check</string>
+    <string name="Reset">Reset</string>
+    <string name="Run">Run</string>
+    <string name="Latitude">w:</string>
+    <string name="Longitude">h:</string>
+    <string name="Exit">Exit</string>
+</resources>
