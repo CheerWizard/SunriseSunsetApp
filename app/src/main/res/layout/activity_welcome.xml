@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.discoveries.jeremy.sunrisesunsetapp.WelcomeActivity"
+    android:background="@drawable/liber_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_centerHorizontal="true"
+        android:padding="8dp">
+
+        <ImageView
+            android:layout_width="180dp"
+            android:layout_height="180dp"
+            android:id="@+id/liberBtn"
+            android:src="@drawable/welcome_button_background"
+            android:layout_margin="16dp"
+            android:layout_gravity="center_horizontal"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:id="@+id/vejen"
+            android:text="Vejen"
+            android:textAlignment="center"
+            android:textSize="56dp"
+            android:textColor="@color/colorAccent"
+            android:layout_gravity="center_horizontal" />
+
+        <Button
+            android:layout_width="180dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/enjoy"
+            android:textSize="16sp"
+            android:layout_gravity="center_horizontal"
+            android:textColor="@android:color/white"
+            android:fontFamily="casual"
+            android:textAlignment="center"
+            android:background="@drawable/background_welcome"
+            android:text="Enjoy "/>
+
+    </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_margin="36dp"
+            android:layout_alignParentBottom="true">
+
+            <TextView
+                android:id="@+id/rightsReserved"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="All rights reserved"
+                android:fontFamily="casual"
+                android:textSize="16sp"
+                android:textColor="@android:color/white"
+                android:textAlignment="center"/>
+
+            <android.support.v7.widget.AppCompatTextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Help Us"
+                android:textSize="16sp"
+                android:textAlignment="center"
+                android:textColor="@color/colorHeaven"
+                android:id="@+id/helpUs"/>
+
+        </LinearLayout>
+
+</RelativeLayout>

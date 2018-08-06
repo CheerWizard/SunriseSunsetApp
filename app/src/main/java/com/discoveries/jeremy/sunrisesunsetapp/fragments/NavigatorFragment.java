@@ -1,29 +1,21 @@
-package com.discoveries.jeremy.sunrisesunsetapp;
+package com.discoveries.jeremy.sunrisesunsetapp.fragments;
 
-import android.Manifest;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.location.Geocoder;
 import android.location.Location;
-import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
-import android.support.annotation.NonNull;
+import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -37,38 +29,42 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.discoveries.jeremy.sunrisesunsetapp.fragments.NavigatorFragment;
-import com.discoveries.jeremy.sunrisesunsetapp.fragments.SunriseSunsetFragment;
-import com.discoveries.jeremy.sunrisesunsetapp.fragments.WeatherFragment;
+import com.discoveries.jeremy.sunrisesunsetapp.CheckAddress;
+import com.discoveries.jeremy.sunrisesunsetapp.CheckLocation;
+import com.discoveries.jeremy.sunrisesunsetapp.DataStorage;
+import com.discoveries.jeremy.sunrisesunsetapp.GPS;
+import com.discoveries.jeremy.sunrisesunsetapp.LauncherActivity;
+import com.discoveries.jeremy.sunrisesunsetapp.NavigatorHelper;
+import com.discoveries.jeremy.sunrisesunsetapp.R;
 
 import java.text.DateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 
-public class LauncherActivity extends AppCompatActivity {
-
-    private ViewPager mViewPager;
-    private SectionsPagerAdapter mSectionsPagerAdapter;
-
-    Geocoder geocoder;
+/**
+ * A simple {@link Fragment} subclass.
+ */
+public class NavigatorFragment extends Fragment {
 
     SQLiteDatabase sqLiteDatabase;
 
-    TextView countryView, cityView, regionView, streetView,
-            latitudeView, longitudeView, distanceView, GPSView;
+    TextView countryView , cityView , regionView , streetView ,
+            latitudeView , longitudeView , distanceView , GPSView;
 
-    Button run, reset;
+    Button run , reset;
 
-    private String startLatitude, startLongitude, endLatitude, endLongitude,
-            country, city, region, street, distance, speed, date, format, lifeStatus;
+    private String  startLatitude , startLongitude , endLatitude , endLongitude ,
+            country , city , region , street , distance , speed , date , format , lifeStatus;
 
     Geocoder geocoder;
 
     Handler handler;
 
-    Runnable runFirstTimeRunnable, runSecondTimeRunnable;
+    Runnable runFirstTimeRunnable , runSecondTimeRunnable;
 
     BroadcastReceiver broadcastReceiver;
+
+    Intent intent;
 
     Switch GPS;
 
@@ -77,25 +73,83 @@ public class LauncherActivity extends AppCompatActivity {
     ListView dataStorageInfoListView;
 
     private Chronometer chronometer;
-    private boolean isRunning, runFirstTime;
+    private boolean isRunning , runFirstTime;
 
-    private String[] distanceFormats = {"m", "km", "cm"};
+    private String[] distanceFormats = {"m" , "km" , "cm"};
 
     ArrayAdapter<String> arrayAdapter;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_launcher);
+    public void setGeocoder(Geocoder geocoder){
+        this.geocoder = geocoder;
+    }
 
-        mViewPager = (ViewPager) findViewById(R.id.container);
-        if (!runtime_permissions()) initialize();
+    public NavigatorFragment() {
+        // Required empty public constructor
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        View v = inflater.inflate(R.layout.fragment_navigator  , container , false);
+        identify(v);
+        initialize();
+        setListeners();
+        return v;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if(broadcastReceiver == null){
+            broadcastReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    if (runFirstTime) {
+                        startLatitude = intent.getStringExtra("firstLatitude");
+                        startLongitude = intent.getStringExtra("firstLongitude");
+                        runNavigationFirstTime();
+                    }
+                    else if (!runFirstTime) {
+                        endLatitude = intent.getStringExtra("nextLatitude");
+                        endLongitude = intent.getStringExtra("nextLongitude");
+                        runNavigationSecondTime();
+                    }
+                }
+            };
+        }
+        getActivity().registerReceiver(broadcastReceiver,new IntentFilter("check_location"));
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if(broadcastReceiver != null){
+            getActivity().unregisterReceiver(broadcastReceiver);
+        }
+    }
+
+    public void identify(View v) {
+
+        countryView = (TextView) v.findViewById(R.id.country);
+        cityView = (TextView) v.findViewById(R.id.city);
+        regionView = (TextView) v.findViewById(R.id.region);
+        streetView = (TextView) v.findViewById(R.id.street);
+        distanceView = (TextView) v.findViewById(R.id.metres);
+        latitudeView = (TextView) v.findViewById(R.id.latitudeTextView);
+        longitudeView = (TextView) v.findViewById(R.id.longitudeTextView);
+        run = (Button) v.findViewById(R.id.runBtn);
+        reset = (Button) v.findViewById(R.id.resetBtn);
+        chronometer = (Chronometer) v.findViewById(R.id.time);
+        GPS = (Switch) v.findViewById(R.id.GPS);
+        GPSView = (TextView) v.findViewById(R.id.GPSView);
+        distanceFormatSpinner = (Spinner) v.findViewById(R.id.spinnerDistance);
+        dataStorageInfoListView = (ListView) v.findViewById(R.id.dataStorageInfo);
+
     }
 
     public void initialize() {
-        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
-        iAdapter(mSectionsPagerAdapter);
-        geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
+
         startLatitude = latitudeView.getText().toString();
         startLongitude = longitudeView.getText().toString();
         distance = distanceView.getText().toString();
@@ -124,12 +178,12 @@ public class LauncherActivity extends AppCompatActivity {
                 distanceView.setText(distance);
             }
         };
-        geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
-        intent = new Intent(getApplicationContext(), GPS.class);
+        geocoder = new Geocoder(getActivity().getApplicationContext() , Locale.getDefault());
+        intent = new Intent(getActivity().getApplicationContext() , GPS.class);
         isRunning = false;
         runFirstTime = true;
 
-        arrayAdapter = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_spinner_item, distanceFormats);
+        arrayAdapter = new ArrayAdapter<String>(getActivity().getApplicationContext() , android.R.layout.simple_spinner_item , distanceFormats);
         arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         distanceFormatSpinner.setAdapter(arrayAdapter);
 
@@ -137,42 +191,11 @@ public class LauncherActivity extends AppCompatActivity {
 
     }
 
-    public void setGeocoder(Geocoder geocoder) {
-        this.geocoder = geocoder;
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (broadcastReceiver != null) {
-            getActivity().unregisterReceiver(broadcastReceiver);
-        }
-    }
-
-    public void identify(View v) {
-
-        countryView = (TextView) v.findViewById(R.id.country);
-        cityView = (TextView) v.findViewById(R.id.city);
-        regionView = (TextView) v.findViewById(R.id.region);
-        streetView = (TextView) v.findViewById(R.id.street);
-        distanceView = (TextView) v.findViewById(R.id.metres);
-        latitudeView = (TextView) v.findViewById(R.id.latitudeTextView);
-        longitudeView = (TextView) v.findViewById(R.id.longitudeTextView);
-        run = (Button) v.findViewById(R.id.runBtn);
-        reset = (Button) v.findViewById(R.id.resetBtn);
-        chronometer = (Chronometer) v.findViewById(R.id.time);
-        GPS = (Switch) v.findViewById(R.id.GPS);
-        GPSView = (TextView) v.findViewById(R.id.GPSView);
-        distanceFormatSpinner = (Spinner) v.findViewById(R.id.spinnerDistance);
-        dataStorageInfoListView = (ListView) v.findViewById(R.id.dataStorageInfo);
-
-    }
-
     public void runNavigationFirstTime() {
         Thread navigator = new Thread(new Runnable() {
             @Override
             public void run() {
-                runCheckAddress(Float.valueOf(startLatitude), Float.valueOf(startLongitude));
+                runCheckAddress(Float.valueOf(startLatitude) , Float.valueOf(startLongitude));
                 distance = getString(R.string.unknown);
                 handler.post(runFirstTimeRunnable);
             }
@@ -185,7 +208,7 @@ public class LauncherActivity extends AppCompatActivity {
         Thread navigator = new Thread(new Runnable() {
             @Override
             public void run() {
-                runCheckAddress(Float.valueOf(endLatitude), Float.valueOf(endLongitude));
+                runCheckAddress(Float.valueOf(endLatitude) , Float.valueOf(endLongitude));
                 calculateDistance();
                 handler.post(runSecondTimeRunnable);
             }
@@ -193,9 +216,9 @@ public class LauncherActivity extends AppCompatActivity {
         navigator.start();
     }
 
-    public void runCheckAddress(float latitude, float longitude) {
+    public void runCheckAddress(float latitude , float longitude) {
 
-        CheckAddress checkAddress = new CheckAddress(longitude, latitude, geocoder);
+        CheckAddress checkAddress = new CheckAddress(longitude , latitude , geocoder);
         city = checkAddress.getCity();
         country = checkAddress.getCountry();
         region = checkAddress.getArea();
@@ -206,7 +229,7 @@ public class LauncherActivity extends AppCompatActivity {
     public void calculateDistance() {
         float results[] = new float[10];
 
-        Location.distanceBetween(Double.valueOf(startLatitude), Double.valueOf(startLongitude), Double.valueOf(endLatitude), Double.valueOf(endLongitude), results);
+        Location.distanceBetween(Double.valueOf(startLatitude) , Double.valueOf(startLongitude) , Double.valueOf(endLatitude) , Double.valueOf(endLongitude) , results);
         distance = String.valueOf(results[0]);
     }
 
@@ -230,7 +253,7 @@ public class LauncherActivity extends AppCompatActivity {
 
         stopTimer();
 
-        Toast.makeText(getActivity().getApplicationContext(), "All fields were reseted!", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getActivity().getApplicationContext() , "All fields were reseted!" , Toast.LENGTH_SHORT).show();
 
     }
 
@@ -241,7 +264,8 @@ public class LauncherActivity extends AppCompatActivity {
                 if (isChecked) {
                     GPSView.setTextColor(getResources().getColor(R.color.colorAccent));
                     getActivity().startService(intent);
-                } else {
+                }
+                else {
                     GPSView.setTextColor(getResources().getColor(android.R.color.white));
                     removeService();
                 }
@@ -256,9 +280,10 @@ public class LauncherActivity extends AppCompatActivity {
         run.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (startLatitude.equals("unknown") || startLongitude.equals("unknown")) {
-                    Toast.makeText(getActivity().getApplicationContext(), "Please , run GPS service!", Toast.LENGTH_SHORT).show();
-                } else {
+                if (startLatitude.equals("unknown")|| startLongitude.equals("unknown")) {
+                    Toast.makeText(getActivity().getApplicationContext() , "Please , run GPS service!" , Toast.LENGTH_SHORT).show();
+                }
+                else {
                     startTimer();
                 }
             }
@@ -291,10 +316,10 @@ public class LauncherActivity extends AppCompatActivity {
     }
 
     public void removeService() {
-        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("geoData", Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("geoData" , Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("firstLongitude", startLongitude);
-        editor.putString("firstLatitude", startLatitude);
+        editor.putString("firstLongitude" , startLongitude);
+        editor.putString("firstLatitude" , startLatitude);
         editor.apply();
         getActivity().stopService(intent);
     }
@@ -331,7 +356,7 @@ public class LauncherActivity extends AppCompatActivity {
 
     public void saveInDataStorage() {
         DataStorage dataStorage = new DataStorage(getActivity().getApplicationContext());
-        dataStorage.addAllData(date, distance, speed, lifeStatus, sqLiteDatabase);
+        dataStorage.addAllData(date , distance , speed , lifeStatus , sqLiteDatabase);
     }
 
     public void getAllFromDataStorage() {
@@ -339,83 +364,8 @@ public class LauncherActivity extends AppCompatActivity {
     }
 
     public void runNavigatorHelper() {
-        NavigatorHelper navigatorHelper = new NavigatorHelper(chronometer, distance, date, format);
+        NavigatorHelper navigatorHelper = new NavigatorHelper(chronometer , distance , date , format);
         speed = navigatorHelper.getSpeed();
         lifeStatus = navigatorHelper.getLifeStatus();
     }
-
-    private boolean runtime_permissions() {
-        if (Build.VERSION.SDK_INT >= 23 && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 100);
-
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 100) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
-                initialize();
-            } else {
-                LauncherActivity.this.finish();
-            }
-        }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.launcher_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        switch (id) {
-            case R.id.exit:
-                LauncherActivity.this.finish();
-                break;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    public class SectionsPagerAdapter extends FragmentPagerAdapter {
-
-        public SectionsPagerAdapter(FragmentManager fm) {
-            super(fm);
-        }
-
-        @Override
-        public Fragment getItem(int position) {
-            switch (position) {
-                case 0:
-                    NavigatorFragment navigatorFragment = new NavigatorFragment();
-                    navigatorFragment.setGeocoder(geocoder);
-                    return navigatorFragment;
-                case 1:
-                    SunriseSunsetFragment sunriseSunsetFragment = new SunriseSunsetFragment();
-                    sunriseSunsetFragment.setGeocoder(geocoder);
-                    return sunriseSunsetFragment;
-                case 2:
-                    WeatherFragment weatherFragment = new WeatherFragment();
-                    weatherFragment.setGeocoder(geocoder);
-                    return weatherFragment;
-                default:
-                    return null;
-            }
-        }
-
-        @Override
-        public int getCount() {
-            // Show 3 total pages.
-            return 3;
-        }
-    }
 }
-
