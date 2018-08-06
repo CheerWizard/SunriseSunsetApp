@@ -20,7 +20,7 @@ public class GPS extends Service {
 
     private LocationManager locationManager;
     private LocationListener listener;
-
+    private boolean runFirstTime;
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -30,16 +30,23 @@ public class GPS extends Service {
     @SuppressLint("MissingPermission")
     @Override
     public void onCreate() {
-
+        runFirstTime = true;
         listener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-
-                Intent intent = new Intent("check_location");
-                intent.putExtra("longitude" , String.valueOf(location.getLongitude()));
-                intent.putExtra("latitude" , String.valueOf(location.getLatitude()));
-                sendBroadcast(intent);
-
+                    if (runFirstTime) {
+                        Intent intent = new Intent("check_location");
+                        intent.putExtra("firstLongitude", String.valueOf(location.getLongitude()));
+                        intent.putExtra("firstLatitude", String.valueOf(location.getLatitude()));
+                        sendBroadcast(intent);
+                        runFirstTime = false;
+                    }
+                    else if (!runFirstTime) {
+                        Intent intent = new Intent("check_location");
+                        intent.putExtra("nextLongitude", String.valueOf(location.getLongitude()));
+                        intent.putExtra("nextLatitude", String.valueOf(location.getLatitude()));
+                        sendBroadcast(intent);
+                    }
             }
 
             @Override

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SunriseSunsetApp</string>
+    <string name="app_name">Vejen</string>
     <string name="Sunset">Sunset:</string>
     <string name="Sunrise">Sunrise:</string>
     <string name="SolarNoon">Solar Noon:</string>
@@ -21,4 +21,22 @@
     <string name="Latitude">w:</string>
     <string name="Longitude">h:</string>
     <string name="Exit">Exit</string>
+    <string name="humidity">Humidity: </string>
+    <string name="temp_min">Minimal Temperature: </string>
+    <string name="temp_max">Maximum Temperature: </string>
+    <string name="pressure_sea_level">Pressure On Sea Level: </string>
+    <string name="pressure_ground_level">Pressure On Ground Level: </string>
+    <string name="wind_speed">Wind Speed Status: </string>
+    <string name="clouds_status">Clouds Status: </string>
+    <string name="rain_status">Rain Status: </string>
+    <string name="snow_status">Snow Status: </string>
+    <string name="country">Country</string>
+    <string name="city">City</string>
+    <string name="region">Region</string>
+    <string name="street">Street</string>
+    <string name="passedRoad">Passed: </string>
+    <string name="timer">Timer: </string>
+    <string name="runGPS">Run GPS</string>
+    <string name="stopGPS">Stop GPS</string>
+    <string name="speed">Speed: </string>
 </resources>
